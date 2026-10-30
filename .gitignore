@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.venv/
+.env
+*.sqlite3*
+demo-workspace/
+demo-remote.git/
+web-demo*/
+.precedent-web/
+api-token
+build/
+dist/

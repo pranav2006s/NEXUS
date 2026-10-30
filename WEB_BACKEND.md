@@ -1,7 +1,8 @@
-# Website backend — version 0.2
+# Website backend — version 0.3
 
 The existing Python core is accessible through a FastAPI JSON API. The CLI,
-SQLite evidence, optional local AI and both Git hooks remain available.
+SQLite evidence and both Git hooks remain available. Gemini AI is enabled by
+default; configure its free-tier key using `AI_SETUP.md`.
 This deliverable is the backend and a JavaScript integration client, not a
 finished website frontend.
 
@@ -14,7 +15,8 @@ This preserves the original local pre-push behavior.
 **Hosted backend:** run the API on a server with trusted Git working copies.
 Analysis, staging and hooks operate on those server copies. A hosted website
 cannot install hooks in a visitor's laptop, read its Git index, or intercept its
-pushes without a local companion. Ollama runs on the backend host, not the browser.
+pushes without a local companion. The backend calls Gemini; the API key never
+belongs in frontend code.
 
 This is a single-user/trusted-team backend. One bearer token grants access to all
 registered repositories. Public multi-user SaaS additionally needs per-user
@@ -29,6 +31,7 @@ Open PowerShell in the extracted `precedent-bouncer` folder:
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[web,terminal,dev]"
 .\.venv\Scripts\python.exe -m pytest -q
+$env:GEMINI_API_KEY = "your-free-tier-project-key"
 $env:PRECEDENT_REPO_ROOTS = (Get-Location).Path
 $env:PRECEDENT_CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:8000,http://localhost:8000"
 .\.venv\Scripts\python.exe -m precedent.web.server
@@ -61,7 +64,8 @@ $result = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/v1/repo
 $result | ConvertTo-Json -Depth 20
 ```
 
-Expected: RED, two RED findings and one YELLOW warning. The demo intentionally
+Expected by default: RED, two RED findings and two YELLOW warnings (missing
+tests plus AI blocked because the fake credential must not be sent to Google). The demo intentionally
 contains a guard deletion and a fake credential; synthetic history is labeled.
 Choose a new folder when repeating setup; the generator refuses overwrites.
 Do not run real GitHub ingestion on a synthetic fixture.
@@ -72,6 +76,7 @@ Do not run real GitHub ingestion on a synthetic fixture.
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[web,terminal,dev]'
+export GEMINI_API_KEY="your-free-tier-project-key"
 export PRECEDENT_REPO_ROOTS="$PWD"
 precedent-server
 ```
@@ -133,6 +138,19 @@ as text, never raw HTML. RED is HTTP 200 with `push_allowed: false`: analysis
 succeeded and found risks. Never display GREEN for an error/unavailable report.
 Only an installed hook intercepts actual Git pushes.
 
+Display `ai.status` from check/why/forecast/commit-message responses:
+- `completed`: generated output, with `cached` indicating a reused response.
+- `unavailable`: missing key/quota/network/invalid output; display `ai.reason`.
+- `blocked`: suspected secrets kept the diff off the cloud.
+- `disabled`: operator explicitly selected basic-only mode.
+- `not_applicable`: no changes to analyze.
+
+`analysis_status` on checks is `ai_completed`, `basic_checks_only` or `no_changes`.
+`mode` on why/commit-message is `gemini-generated`, `gemini-generated-cached`, or
+an explicitly labeled template mode. Basic output remains usable but is not an
+AI result. AI interpretation is advisory; the gate still uses deterministic risks.
+Source IDs are validated; factual correctness of generated prose is not guaranteed.
+
 | HTTP status | Meaning |
 | --- | --- |
 | 200 / 201 | Result / registered repo |
@@ -161,7 +179,8 @@ resume from already-cached commits.
 | `PRECEDENT_BIND` / `PRECEDENT_PORT` | `127.0.0.1` / `8000` |
 | `PRECEDENT_CORS_ORIGINS` | Exact localhost origins on 5173 and 8000, comma-separated |
 | `PRECEDENT_ALLOWED_HOSTS` | `localhost,127.0.0.1,[::1]`; add backend domain when hosting |
-| `PRECEDENT_AI` / `PRECEDENT_MODEL` | Existing optional Ollama settings |
+| `GEMINI_API_KEY` | Required for new Gemini responses; free-tier project only |
+| `PRECEDENT_AI` | Defaults to enabled; `0` explicitly selects basic-only mode |
 | `GITHUB_TOKEN` | Optional server-side GitHub credential |
 
 Hooks outside the repository Git directory are rejected by the web endpoint
@@ -194,9 +213,10 @@ code. This service is not a sandbox for untrusted repositories.
 
 ## Verification and dependencies
 
-Run `python -m pytest -q` with `[web,dev]` installed. All 21 original tests remain;
-web tests skip if optional web dependencies are absent. Actual Gemma inference
-and Windows/macOS execution remain unverified in this build.
+Run `python -m pytest -q` with `[web,dev]` installed. Core regressions remain;
+the old Ollama-specific test is replaced by Gemini provider tests. Web tests skip
+if optional web dependencies are absent. Live Gemini inference needs your key;
+Windows/macOS execution remains unverified in this environment.
 
 Official API references:
 - https://fastapi.tiangolo.com/tutorial/security/first-steps/

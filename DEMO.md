@@ -1,5 +1,7 @@
 # Three-minute offline demonstration
 
+For an offline deterministic rehearsal, set PRECEDENT_AI=0 explicitly.
+For the AI-enabled demonstration, see AI_SETUP.md and leave AI enabled.
 Run the setup once before presenting, in a shell with the package installed.
 The fixture intentionally uses synthetic GitHub data, clearly labeled in output.
 The Git commits and push-blocking behavior are real.
@@ -36,9 +38,9 @@ git commit -m 'test(parser): cover valid input'
 git push origin HEAD:refs/heads/main
 ```
 
-6. **2:40–3:00:** “Facts and verdicts are deterministic. The optional local model
-   selects grounded wording. Missing evidence is explicitly shown, and everything
-   required for this demo is cached.”
+6. **2:40–3:00:** “Facts and verdicts are deterministic. In AI-enabled mode, Gemini
+   interprets retrieved evidence and changes. Missing evidence and AI unavailability
+   are explicit. This offline rehearsal demonstrates basic checks.”
 
 The real `prepare-commit-msg` demonstration is optional: use `git commit` without
 `-m`, then show the prefilled editor. Avoid spending stage time in an unfamiliar

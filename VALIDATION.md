@@ -1,5 +1,37 @@
 # Validation record
 
+## Version 0.3 default-on free-tier API adapter
+
+- `python -m pytest -q`: **45 passed**. Core regressions remain; the obsolete
+  Ollama selector test was replaced by a missing-key test and Gemini tests added.
+- `python -m compileall -q precedent scripts`: passed.
+- Live local Uvicorn HTTP smoke test: version 0.3, default-enabled configuration,
+  missing-key diagnostics on why/check, secret-blocked cloud analysis and preserved
+  deterministic RED verdict all passed with no Gemini credentials.
+- Mocked Gemini tests: generation request shape, exact endpoint and header,
+  generated subject from actual diff, grounded citations, source-bound cache,
+  429 without retries/provider switching, timeout, malformed output, invented
+  citations, truncation/finish failure, payload limits, explicit disable,
+  redaction and added/removed secret blocking.
+- Web tests verify generated-result metadata and unavailable/blocked states.
+- Default provider/model: Gemini / gemini-3.5-flash-lite. Google's published
+  pricing lists a free tier; account eligibility/quota and billing remain an
+  operator responsibility. Billing cannot be established from an API key.
+- Live Google inference has NOT been executed: no user key was supplied. Provider
+  tests use synthetic responses. No quota, latency or account access is claimed.
+- No paid fallback, search tool or auto-retry is configured. Free API access is
+  not unlimited. Instructions explicitly require a Free-tier project without
+  paid billing; a paid key on the same endpoint can incur charges.
+- The local Ollama selector is retired. Tests have a default offline fixture;
+  targeted provider tests explicitly enable mocked AI. No external inference is
+  performed by the test suite.
+- The existing Starlette/HTTPX test-client deprecation warning remains nonfatal.
+- AI-generated prose is not guaranteed factually correct; only structure and
+  supplied citation identity are validated. Deterministic findings remain
+  authoritative for the push gate. See AI_SETUP.md for privacy/coverage limits.
+
+The records below describe earlier builds and their historical validation.
+
 ## Version 0.2 web adapter verification
 
 - `python -m pytest -q`: **32 passed** (21 original tests, 11 web tests).
