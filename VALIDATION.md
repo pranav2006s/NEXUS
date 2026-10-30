@@ -1,5 +1,63 @@
 # Validation record
 
+## Version 0.3 default-on free-tier API adapter
+
+- `python -m pytest -q`: **45 passed**. Core regressions remain; the obsolete
+  Ollama selector test was replaced by a missing-key test and Gemini tests added.
+- `python -m compileall -q precedent scripts`: passed.
+- Live local Uvicorn HTTP smoke test: version 0.3, default-enabled configuration,
+  missing-key diagnostics on why/check, secret-blocked cloud analysis and preserved
+  deterministic RED verdict all passed with no Gemini credentials.
+- Mocked Gemini tests: generation request shape, exact endpoint and header,
+  generated subject from actual diff, grounded citations, source-bound cache,
+  429 without retries/provider switching, timeout, malformed output, invented
+  citations, truncation/finish failure, payload limits, explicit disable,
+  redaction and added/removed secret blocking.
+- Web tests verify generated-result metadata and unavailable/blocked states.
+- Default provider/model: Gemini / gemini-3.5-flash-lite. Google's published
+  pricing lists a free tier; account eligibility/quota and billing remain an
+  operator responsibility. Billing cannot be established from an API key.
+- Live Google inference has NOT been executed: no user key was supplied. Provider
+  tests use synthetic responses. No quota, latency or account access is claimed.
+- No paid fallback, search tool or auto-retry is configured. Free API access is
+  not unlimited. Instructions explicitly require a Free-tier project without
+  paid billing; a paid key on the same endpoint can incur charges.
+- The local Ollama selector is retired. Tests have a default offline fixture;
+  targeted provider tests explicitly enable mocked AI. No external inference is
+  performed by the test suite.
+- The existing Starlette/HTTPX test-client deprecation warning remains nonfatal.
+- AI-generated prose is not guaranteed factually correct; only structure and
+  supplied citation identity are validated. Deterministic findings remain
+  authoritative for the push gate. See AI_SETUP.md for privacy/coverage limits.
+
+The records below describe earlier builds and their historical validation.
+
+## Version 0.2 web adapter verification
+
+- `python -m pytest -q`: **32 passed** (21 original tests, 11 web tests).
+- `python -m compileall -q precedent scripts`: passed.
+- `node --check examples/api-client.mjs`: passed syntax check.
+- Started an actual Uvicorn process on loopback and issued HTTP requests:
+  health, authenticated registration, combined check (2 RED / 1 YELLOW),
+  evidence-backed why, commit-message response and OpenAPI version all passed.
+- Web tests cover bearer authentication, origins/CORS, Host validation, 1 MiB
+  request limits, safe validation errors, root/path restrictions, registration,
+  persistence, staging, hook preservation, commit-range secret detection,
+  background ingestion success/failure, busy-repository rejection, restart
+  interruption state and OpenAPI authentication metadata.
+- Original CLI/core/Git hook tests remain passing without changes to their logic.
+- Web ingestion tests use controlled function responses. The original live
+  GitHub validation below covers the shared ingestion implementation; a new live
+  GitHub request through the web job endpoint was not needed or claimed.
+- FastAPI 0.162.0, Uvicorn 0.54.0 and HTTPX 0.28.1 were installed for this run.
+  Starlette emits a test-client deprecation warning for HTTPX; tests still pass.
+- Actual browser frontend rendering, Windows/macOS execution, public deployment,
+  multi-user isolation and actual Gemma inference are not verified here.
+- Single-process locking: use one server worker and avoid concurrent external
+  modifications to the same Git index. See `WEB_BACKEND.md` for deployment limits.
+
+The record below describes the original CLI build.
+
 Build session: 31 October 2026 (Asia/Kolkata). Linux, Python 3.12.14, Git 2.51.1.
 
 ## Executed successfully

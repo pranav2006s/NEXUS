@@ -1,0 +1,2 @@
+# Optional rich output. Core CLI also works with the Python standard library.
+rich>=13
