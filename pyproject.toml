@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "precedent-bouncer"
+version = "0.1.0"
+description = "Evidence-backed local Git history checks"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+terminal = ["rich>=13"]
+dev = ["pytest>=8"]
+
+[project.scripts]
+precedent = "precedent.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["precedent*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
