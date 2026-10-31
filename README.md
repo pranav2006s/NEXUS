@@ -1,76 +1,83 @@
-# NEXUS Frontend
+# Precedent Bouncer — Frontend Web Application
 
-A separate React + Vite developer console for the existing [NEXUS](https://github.com/pranav2006s/NEXUS) FastAPI backend (inspected October 31, 2026). This frontend does **not** edit or replace backend logic.
+A modern, responsive, developer-oriented code intelligence dashboard for **Precedent Bouncer**, an AI-powered, history-aware Git protection and productivity platform.
 
-## Requirements
+Built with **React**, **Vite**, **TypeScript**, **Tailwind CSS**, and **Recharts**.
 
-- Node.js 20.19+ or 22.12+ (for Vite 6 compatibility).
-- Existing NEXUS Python backend running at `http://127.0.0.1:8000`.
-- A private bearer token from the backend's `~/.precedent-web/api-token` or `PRECEDENT_API_TOKEN`.
+---
 
-## Run frontend
+## 1. Quick Start
 
+### Prerequisites
+- Node.js (v18+)
+- Python 3.11+ (for the Precedent Bouncer FastAPI backend)
+
+### Installation
+From the `frontend` directory:
 ```bash
-cd nexus-frontend
 npm install
+```
+
+### Development Server
+```bash
 npm run dev
 ```
+The application runs by default at `http://localhost:5173`.
 
-Open <http://127.0.0.1:5173>. Enter the backend URL and its bearer token. The token lives in React memory only and disappears on refresh, disconnect, or closing the tab. It is not compiled into the bundle or stored in localStorage/sessionStorage.
-
-## Run backend (Windows PowerShell example)
-
-From the root of the *separate NEXUS backend repository*:
-
-```powershell
-py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -e ".[web,terminal,dev]"
-$env:GEMINI_API_KEY = "<your-Gemini-key>"
-$env:PRECEDENT_REPO_ROOTS = (Get-Location).Path
-$env:PRECEDENT_CORS_ORIGINS = "http://127.0.0.1:5173,http://localhost:5173"
-.\.venv\Scripts\python.exe -m precedent.web.server
+### Production Build
+```bash
+npm run build
+npm run preview
 ```
 
-The example key placeholder belongs only to the **backend shell**, never the browser. The backend does not auto-load `.env`; set environment variables before starting it.
+---
 
-Read the bearer token in another PowerShell session:
+## 2. Connecting to the Backend
 
+The frontend connects to the Python FastAPI companion server running at `http://127.0.0.1:8000`.
+
+### Running the Python Backend
+In PowerShell from the repository root:
 ```powershell
-Get-Content "$HOME\.precedent-web\api-token"
+$env:PRECEDENT_REPO_ROOTS = (Resolve-Path .).Path
+$env:PRECEDENT_WEB_STATE = (Resolve-Path .\.precedent-web).Path
+$env:PRECEDENT_CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173,http://127.0.0.1:8000,http://localhost:8000"
+$env:PRECEDENT_AI = "0" # Optional: set to 1 if local Ollama model (gemma3:4b) is active
+.\NEXUS-main\.venv\Scripts\python.exe -m uvicorn precedent.web.server:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-Go to NEXUS backend's `WEB_BACKEND.md` for complete backend configuration.
+### Supplying the Bearer API Token
+1. Open the Precedent Bouncer Web UI (`http://localhost:5173`).
+2. Navigate to **Settings** (`/settings`).
+3. Enter your API Token (generated in `.precedent-web/api-token` or configured via `PRECEDENT_API_TOKEN`).
+4. Click **Save & Verify**. The status badge in the sidebar will switch to **Online**.
 
-### Demo fixture
+---
 
-```powershell
-.\.venv\Scripts\python.exe scripts\create_demo.py demo-workspace
-```
+## 3. Dedicated Pages & Feature Tour
 
-Then register the **absolute** path to `demo-workspace` in the frontend. It must be inside `PRECEDENT_REPO_ROOTS`. The fixture is synthetic and intentionally contains a risky staged change, so expected findings are not real GitHub evidence. Do not ingest live GitHub history into this synthetic demo.
+| Page | Path | Description |
+| --- | --- | --- |
+| **Dashboard** | `/` | Repository health overview, risk distribution chart, metric cards, recent analyses, quick actions. |
+| **Fence Check** | `/fence-check` | Core feature: evaluates staged diffs & outgoing commits against historical bug justifications. Displays code diffs, blamed commits, PR/issue links, and recommendations. |
+| **Secret Scanner** | `/secret-scanner` | Credential interception for AWS access keys, GitHub tokens, and private keys. All secrets redacted; remediation guidance provided. |
+| **Review Forecast** | `/review-forecast` | Empirical radar & bar charts of recurring maintainer expectations (tests, error handling, performance, security). |
+| **Precedent Explorer** | `/precedent-explorer` | Code investigation search (`file.py:line`) explaining why code exists, linking blamed commits with historical issues and PR timeline. |
+| **Commit Generator** | `/commit-generator` | Conventional commit message suggestion with issue backlinks and interactive editor. |
+| **Repositories** | `/repositories` | Register local repository roots inside `PRECEDENT_REPO_ROOTS` and trigger GitHub evidence ingestion. |
+| **Analysis History** | `/history` | Search, filter by verdict, view past reports, and export history as JSON. |
+| **Settings** | `/settings` | Backend URL, API bearer token, Local AI Ollama status, GitHub token status, and theme toggle. |
 
-## Features
+---
 
-- Live connection via `GET /api/v1/repositories` using bearer-token authorization.
-- Register/select repository; show status, ingestion coverage, AI configuration, and staged paths.
-- Stage named repository-relative paths.
-- Check staged changes or a Git commit range; display actual RED/YELLOW/GREEN verdict, findings, push allowance, analysis status, and Gemini status.
-- Explain historical code lines with `why` and cached evidence.
-- Generate a review forecast, commit message, or secret scan.
-- Ingest GitHub history asynchronously with job-status polling.
-- Install backend-local pre-push and prepare-commit-msg hooks, with explicit confirmation.
-- Responsive desktop/mobile layout.
+## 4. Design System Tokens
 
-## Security and scope
-
-- **Do not deploy this as an open, multi-user web service.** NEXUS currently uses a single shared bearer token that grants access to all registered repositories; it requires a separate per-user identity, authorization, and isolation layer before public deployment.
-- `GEMINI_API_KEY` and `GITHUB_TOKEN` belong exclusively to the Python backend.
-- Server responses are rendered as React text nodes, not HTML, to avoid unsafe rendering of repository text.
-- The API only sees Git repositories on the machine running the Python backend. A hosted browser cannot directly read files on each visitor's laptop or install hooks on the visitor's machine.
-- A RED result may come back with HTTP 200; results are driven by `verdict`, not HTTP status. On an API error, the frontend does not claim GREEN.
-- Git hooks can be bypassed. AI output is advisory and not a guarantee of correctness or approval.
-- Only simulated/HTTP-mocked unit tests can prove compatibility without a live backend and Gemini key. Integration tests were not run in this environment.
-
-## Repo integration
-
-Copy `nexus-frontend/` into the root of your NEXUS checkout, then run `npm install && npm run dev` inside it. The backend code stays untouched.
+- **Background:** Dark charcoal (`#090d16`)
+- **Surfaces:** Deep navy (`#0f172a`, `#111c33`)
+- **Borders:** Subtle slate (`#1e293b`)
+- **Accents:** Electric cyan (`#38bdf8`) & Royal blue (`#2563eb`)
+- **Verdict Indicators:**
+  - `RED`: Confirmed critical risk or secret detected (`#ef4444`)
+  - `YELLOW`: Caution, missing tests, or incomplete coverage (`#f59e0b`)
+  - `GREEN`: No significant historical invariant violated (`#10b981`)
+- **Typography:** Inter (Sans-serif UI) & JetBrains Mono (File paths, hashes, code snippets, diffs)
