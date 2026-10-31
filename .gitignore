@@ -3,3 +3,12 @@ dist/
 .env
 .env.*
 !.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+*.sqlite3*
+*.db
+api-token
+.precedent-web/
